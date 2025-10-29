@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Member List - Shri Kutch Kadva Patidar Yuvak Mandal{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between;">
+    <form method="get" style="display:flex; align-items:center; gap:5px;">
+        <select name="search_type" style="width:120px;">
+            <option value="">Select</option>
+            <option value="Name" {% if search_type == 'Name' %}selected{% endif %}>Name</option>
+            <option value="Mobile number" {% if search_type == 'Mobile number' %}selected{% endif %}>Mobile number</option>
+            <option value="Blood Group" {% if search_type == 'Blood Group' %}selected{% endif %}>Blood Group</option>
+            <option value="Member Id" {% if search_type == 'Member Id' %}selected{% endif %}>Member Id</option>
+            <option value="Business type" {% if search_type == 'Business type' %}selected{% endif %}>Business type</option>
+        </select>
+        <input type="text" name="search_query" value="{{ search_query }}" placeholder="Search" style="width:120px;">
+        <button type="submit" style="background-color:#1a4e80; color:white; border:none; padding:8px 16px; border-radius:4px;">Search</button>
+    </form>
+
+    <div>Total Members: <b style="font-size:20px;">{{ members.count }}</b></div>
+
+    <a href="{% url 'add_member' %}">
+        <button style="background-color:#1a4e80; color:white; border:none; padding:8px 16px; border-radius:4px; cursor:pointer;">
+            ADD NEW MEMBER
+        </button>
+    </a>
+</div>
+
+<table style="width:100%; border-collapse:collapse; margin-top:20px; background:#fff;">
+    <thead>
+        <tr style="background-color:#1a4e80; color:white;">
+            <th>SR NO</th>
+            <th>MEMBER ID</th>
+            <th>NAME</th>
+            <th>RELATIONSHIP</th>
+            <th>MARITAL STATUS</th>
+            <th>DOB</th>
+            <th>ADDRESS</th>
+            <th>BLOOD GROUP</th>
+            <th>MOBILE</th>
+            <th>BUSINESS TYPE</th>
+            <th>BUSINESS NAME</th>
+            <th>PHOTO</th>
+            <th>ACTION</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for member in members %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ member.yuvak_mandal_id }}</td>
+            <td>{{ member.member_name }}</td>
+            <td>{{ member.relationship }}</td>
+            <td>{{ member.marital_status }}</td>
+            <td>{{ member.date_of_birth }}</td>
+            <td>{{ member.address }}</td>
+            <td>{{ member.blood_group }}</td>
+            <td>{{ member.mobile_number }}</td>
+            <td>{{ member.type_of_business }}</td>
+            <td>{{ member.business }}</td>
+            <td>
+                {% if member.photo %}
+                <img src="{{ member.photo.url }}" width="80" height="80">
+                {% else %}
+                <img src="https://via.placeholder.com/80" width="80" height="80">
+                {% endif %}
+            </td>
+            <td><a href="{% url 'edit_member' member.id %}">Edit</a> | <a href="#">Delete</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="13">No members found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

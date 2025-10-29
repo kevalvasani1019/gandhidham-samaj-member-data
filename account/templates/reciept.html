@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Receipt{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+    }
+
+    .form-row .field-group {
+        display: flex;
+        align-items: center;
+        margin-right: 40px;
+    }
+
+    .form-row label {
+        font-weight: bold;
+        color: #333;
+        margin-right: 10px;
+        min-width: 120px;
+        text-align: right;
+    }
+
+    .form-row input, .form-row select {
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: #fff;
+    }
+
+    th, td {
+        border: 1px solid #999;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background-color: #1a4e80;
+        color: white;
+    }
+
+    .input-small {
+        height: 25px !important;
+        width: 50px !important;
+        font-size: medium !important;
+    }
+
+    .total-amount {
+        margin-top: 10px;
+        text-align: right;
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+    .messages {
+        margin-bottom: 15px;
+    }
+
+    .messages .success {
+        color: green;
+    }
+
+    .messages .error {
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="{% url 'receipt' %}">
+    {% csrf_token %}
+
+    <div class="form-row" style="margin-bottom: 25px;">
+        <div style="flex-grow: 1; display: flex; align-items: center;">
+            <label>Receipt no.:</label>
+            <input class="input-small" type="text" name="receipt_number" id="receipt_number" readonly />
+        </div>
+        <div style="flex-shrink: 0;">
+            <button type="submit" style="background-color: #2c6cb2; color: white; border: none; padding: 10px 30px; border-radius: 4px; cursor: pointer; font-size: 20px; font-weight: bold;" title="Add New Receipt">
+                Add New Receipt
+            </button>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="field-group">
+            <label>Yuvak Mandal ID:</label>
+            <input class="input-small" type="text" name="yuvak_mandal_id" id="yuvak_mandal_id" />
+        </div>
+        <div class="field-group">
+            <label>Mobile no.:</label>
+            <input type="number" style="width: 150px;" name="mobile_number" id="mobile_number" />
+        </div>
+        <div class="field-group" style="margin-left: auto; margin-right: 0;">
+            <label>Date:</label>
+            <input type="date" style="width: 125px;" name="date" id="receipt_date" />
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="field-group" style="flex-grow: 1;">
+            <label>Member Name:</label>
+            <input type="text" style="width: 320px;" name="member_name" id="member_name" />
+            <select id="member_select" style="width: 320px; display:none;"></select>
+        </div>
+        <div class="field-group" style="margin-left: auto; margin-right: 0;">
+            <label>Fee/Donation:</label>
+            <select style="width: 136px;" name="fee_donation">
+                <option value="">Select</option>
+                {% for type in payment_types %}
+                    <option value="{{ type.id }}">{{ type.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="field-group" style="flex-grow: 1;">
+            <label>Purpose:</label>
+            <input type="text" style="height: 17px; width: 500px;" name="purpose" placeholder="Fees/Donation" />
+        </div>
+        <div class="field-group" style="margin-left: auto; margin-right: 0;">
+            <label>Amount:</label>
+            <input type="number" style="height: 25px; width: 125px; font-size: 25px; font-weight: bold;" name="amount" />
+        </div>
+    </div>
+
+    <br />
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 20px; flex-wrap: wrap;">
+    <!-- Date Range Filter (Left) -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label>From:</label>
+        <input type="date" name="from_date" id="from_date" />
+        <label>To:</label>
+        <input type="date" name="to_date" id="to_date" />
+        <button type="button" id="filterBtn" style="background-color:#4CAF50;color:white;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;">Filter</button>
+    </div>
+
+    <!-- Messages (Center) -->
+    <div class="messages" style="flex-grow: 1; text-align: center;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Save Button (Right) -->
+    <div style="flex-shrink: 0;">
+        <button style="background-color: #2c6cb2; color: white; border: none; padding: 13px 52px; border-radius: 4px; cursor: pointer; font-size: 20px; font-weight: bold;" title="Save">
+            Save
+        </button>
+    </div>
+</div>
+
+</form>
+
+<table id="receiptTable">
+    <thead>
+        <tr>
+            <th>Receipt NO</th>
+            <th>Date</th>
+            <th>MEMBER NAME</th>
+            <th>Member ID</th>
+            <th>Transaction Type</th>
+            <th>Amount</th>
+            <th>On behalf</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Rows will be populated by JS -->
+    </tbody>
+</table>
+
+<div class="total-amount">
+    Total Amount: <span id="totalAmount">0</span>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// -------------------- TOTAL AMOUNT --------------------
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('#receiptTable .amount').forEach(cell => {
+        total += parseFloat(cell.textContent) || 0;
+    });
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+
+// -------------------- NEXT RECEIPT NUMBER --------------------
+function fetchNextReceiptNumber(date) {
+    const receiptInput = document.getElementById('receipt_number');
+    const params = date ? `?date=${date}` : '';
+    fetch('/get_next_receipt_number/' + params)
+        .then(res => res.json())
+        .then(data => {
+            receiptInput.value = data.next_receipt_number;
+        })
+        .catch(err => console.log("Error fetching next receipt number", err));
+}
+
+// -------------------- MEMBER DYNAMIC SELECTION --------------------
+const idField = document.getElementById("yuvak_mandal_id");
+const mobileField = document.getElementById("mobile_number");
+const nameInput = document.getElementById("member_name");
+const nameSelect = document.getElementById("member_select");
+const receiptTableBody = document.querySelector("#receiptTable tbody");
+
+// Populate member fields and show dropdown if multiple
+function populateMembers(members) {
+    if (members.length === 1) {
+        nameInput.style.display = "inline-block";
+        nameSelect.style.display = "none";
+        nameInput.value = members[0].member_name;
+        mobileField.value = members[0].mobile_number;
+        idField.value = members[0].yuvak_mandal_id;
+        fetchReceipts(`yuvak_mandal_id=${members[0].yuvak_mandal_id}`);
+    } else if (members.length > 1) {
+        nameSelect.innerHTML = "<option value=''>Select Member</option>";
+        members.forEach(m => {
+            const opt = document.createElement("option");
+            opt.value = m.member_name;
+            opt.textContent = m.member_name;
+            opt.dataset.ymid = m.yuvak_mandal_id;
+            opt.dataset.mobile = m.mobile_number;
+            nameSelect.appendChild(opt);
+        });
+        nameInput.style.display = "none";
+        nameSelect.style.display = "inline-block";
+
+        nameSelect.onchange = (e) => {
+            const selectedOption = e.target.selectedOptions[0];
+            if (selectedOption) {
+                nameInput.value = selectedOption.value;
+                mobileField.value = selectedOption.dataset.mobile;
+                idField.value = selectedOption.dataset.ymid;
+                fetchReceipts(`yuvak_mandal_id=${selectedOption.dataset.ymid}`);
+            } else {
+                fetchReceipts();
+            }
+        };
+    } else {
+        nameSelect.style.display = "none";
+        nameInput.style.display = "inline-block";
+        nameInput.value = "";
+        mobileField.value = "";
+        idField.value = "";
+        fetchReceipts();
+    }
+}
+
+// Fetch members from server based on any input
+function fetchMembers(params) {
+    fetch(`/get_members/?${params}`)
+        .then(res => res.json())
+        .then(data => populateMembers(data.members))
+        .catch(() => console.log("Error fetching members"));
+}
+
+// -------------------- FETCH RECEIPTS --------------------
+function fetchReceipts(params = "") {
+    fetch(`/get_receipts/?${params}`)
+        .then(res => res.json())
+        .then(data => {
+            receiptTableBody.innerHTML = "";
+            let total = 0;
+            data.receipts.forEach(r => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${r.receipt_number}</td>
+                    <td>${r.date}</td>
+                    <td>${r.member_name}</td>
+                    <td>${r.yuvak_mandal_id}</td>
+                    <td>${r.fee_donation}</td>
+                    <td class="amount">${r.amount}</td>
+                    <td>${r.member_name}</td>
+                    <td>
+                        <button>View</button>
+                        <button>Edit</button>
+                        <button>Delete</button>
+                    </td>
+                `;
+                receiptTableBody.appendChild(tr);
+                total += parseFloat(r.amount) || 0;
+            });
+            document.getElementById("totalAmount").textContent = total.toFixed(2);
+        })
+        .catch(err => console.log("Error fetching receipts", err));
+}
+
+// -------------------- DATE RANGE FILTER --------------------
+document.getElementById("filterBtn").addEventListener("click", () => {
+    const fromDate = document.getElementById("from_date").value;
+    const toDate = document.getElementById("to_date").value;
+    let params = "";
+    if (fromDate) params += `from_date=${fromDate}&`;
+    if (toDate) params += `to_date=${toDate}&`;
+    if (idField.value.trim()) params += `yuvak_mandal_id=${idField.value.trim()}`;
+    fetchReceipts(params);
+});
+
+// -------------------- INPUT EVENT LISTENERS --------------------
+// Auto-fill by Yuvak ID
+idField.addEventListener("input", () => {
+    const val = idField.value.trim();
+    if (val) fetchMembers(`yuvak_mandal_id=${val}`);
+    else fetchReceipts();
+});
+
+// Auto-fill by mobile number
+mobileField.addEventListener("input", () => {
+    const val = mobileField.value.trim();
+    if (val) fetchMembers(`mobile_number=${val}`);
+    else fetchReceipts();
+});
+
+// Auto-fill by member name
+nameInput.addEventListener("input", () => {
+    const val = nameInput.value.trim();
+    if (val) fetchMembers(`member_name=${val}`);
+    else fetchReceipts();
+});
+
+// -------------------- PAGE LOAD --------------------
+window.addEventListener("DOMContentLoaded", () => {
+    const dateField = document.getElementById('receipt_date');
+    if (!dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+    fetchNextReceiptNumber(dateField.value);
+    fetchReceipts(); // load all receipts initially
+});
+
+document.getElementById('receipt_date').addEventListener('change', (e) => {
+    fetchNextReceiptNumber(e.target.value);
+});
+</script>
+{% endblock %}

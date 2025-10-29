@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Form - Shri Kutch Kadva Patidar Yuvak Mandal{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.form-row label {
+    width: 150px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-row input,
+.form-row select {
+    width: 220px;
+    padding: 5px;
+    margin-right: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button.save-btn {
+    background-color: #2c6cb2;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+button.save-btn:hover {
+    background-color: #1a4e80;
+}
+
+.save-container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-row">
+        <div style="flex: 1; text-align: left;">
+            <label>Yuvak Mandal ID:</label>
+            <input name="yuvak_mandal_id" style="height: 25px; width: 50px; font-size: medium; font-weight: bold;" type="text" required>
+        </div>
+        <div style="flex: 1; text-align: left;">
+            <label>Mobile No.:</label>
+            <input name="mobile_number" type="text" style="height: 25px; width: 150px; font-size: larger;" placeholder="Mobile number" required>
+        </div>
+    </div>
+    <br>
+
+    <div class="form-row">
+        <label>Member Name:</label>
+        <input name="member_name" type="text" style="height: 25px; width: 400px; font-weight: bold; font-size: larger;">
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;Relationship:</label>
+        <select name="relationship" style="width: 100px;">
+            <option value="">Select</option>
+            {% for item in relationship_types %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <br>
+
+    <div class="form-row">
+        <label>Member Address:</label>
+        <input name="plot_number" style="width: 150px;" type="text" placeholder="Plot number">
+        <input name="landmark" style="width: 150px;" type="text" placeholder="Land mark">
+        <input name="city" style="width: 150px;" type="text" placeholder="City">
+        <input name="state" style="width: 150px;" type="text" placeholder="State">
+    </div>
+    <br>
+
+    <div class="form-row">
+        <label>Type of Business:</label>
+        <select name="business_type" style="width: 200px;">
+            <option value="">Select</option>
+            {% for item in business_types %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+        <label>&nbsp;&nbsp;&nbsp;Business name:</label>
+        <input name="business" type="text" style="height: 25px; width: 300px; font-weight: bold; font-size: larger;" placeholder="Business name">
+    </div>
+    <br>
+
+    <div class="form-row">
+        <label>Date of Birth:</label>
+        <input name="date_of_birth" type="date" style="width: 150px;">
+        <label>&nbsp;&nbsp;&nbsp;Blood Group:</label>
+        <select name="blood_group" style="width: 100px;">
+            <option value="">Select</option>
+            {% for item in blood_groups %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+        <label>&nbsp;&nbsp;&nbsp;Marital Status:</label>
+        <select name="marital_status" style="width: 200px;">
+            <option value="">Select</option>
+            {% for item in marital_statuses %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <br>
+
+    <div class="save-container">
+        <div style="flex: 0 0 30%;">
+            <input type="file" name="photo" accept="image/*">
+        </div>
+        <div style="flex: 0 0 70%; padding-left: 20px;">
+            <button type="submit" class="save-btn" title="Save">
+                <i class="fa fa-save"></i> Save
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

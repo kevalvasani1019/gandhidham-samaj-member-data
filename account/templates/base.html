@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shri Kutch Kadva Patidar Yuvak Mandal{% endblock %}</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background-color: #1a4e80;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 30px;
+        }
+
+        .sidebar img {
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .sidebar h3 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            background-color: transparent;
+            color: white;
+            font-size: 16px;
+            padding: 10px 0;
+            width: 100%;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar a:hover {
+            background-color: #2c6cb2;
+        }
+
+        /* Main */
+        .main {
+            flex: 1;
+            background-color: #fffbe8;
+            padding: 20px 40px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            color: #c00000;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            background-color: #1a4e80;
+            color: white;
+            padding: 8px;
+            font-size: 14px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" width="120" height="120">
+            <h3>MEMBERS</h3>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'members' %}">Members</a>
+            <a href="{% url 'receipt' %}">Receipt</a>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main">
+            <div class="header">
+                <h2>SHRI KUTCH KADVA PATIDAR YUVAK MANDAL - GANDHIDHAM</h2>
+            </div>
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
