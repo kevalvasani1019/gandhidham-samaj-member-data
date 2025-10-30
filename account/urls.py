@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import Home, MemberListView, AddFormCreateView, edit_member,  get_members, get_next_receipt_number, get_receipts, receipt_view
+from .views import Home, MemberListView, AddFormCreateView, edit_member,  get_members, get_next_receipt_number, get_receipts, receipt_detail, receipt_view
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -13,7 +13,7 @@ path('receipt/', receipt_view, name='receipt'),
     path('get_members/', get_members, name='get_members'),
     path('get_next_receipt_number/', get_next_receipt_number, name='get_next_receipt_number'),
     path('get_receipts/', get_receipts, name='get_receipts'),
-    
+    path('receipt/<int:pk>/', receipt_detail, name='receipt_detail'),
     path("member/<int:pk>/edit/", edit_member, name="edit_member"),
 
 

@@ -253,7 +253,8 @@ def get_receipts(request):
 
     # Prepare JSON response
     receipts = [
-        {
+        {   
+            "id": r.pk,
             "receipt_number": r.receipt_number,
             "date": r.date.strftime("%d-%m-%Y"),
             "member_name": r.member.member_name,
@@ -341,4 +342,22 @@ def edit_member(request, pk):
 #     )
 #     return message.sid
 
+def receipt_detail(request, pk):
+    """
+    Retrieve and render a specific receipt by primary key.
+    """
+    receipt = get_object_or_404(Receipt, pk=pk)
+    print(":::::::::::::::::::::::::::", receipt)
+    # Convert amount to words (optional, using built-in num2words if installed)
+    try:
+        from num2words import num2words
+        amount_in_words = num2words(receipt.amount, to='currency', lang='en_IN').replace("euro", "Rupees").title()
+    except ImportError:
+        amount_in_words = f"Rupees {receipt.amount} Only" if receipt.amount else ""
 
+    context = {
+        "receipt": receipt,
+        "amount_in_words": amount_in_words,
+    }
+
+    return render(request, "reciept_detail.html", context)

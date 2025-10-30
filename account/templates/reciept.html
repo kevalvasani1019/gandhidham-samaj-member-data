@@ -296,7 +296,10 @@ function fetchReceipts(params = "") {
                     <td class="amount">${r.amount}</td>
                     <td>${r.member_name}</td>
                     <td>
-                        <button>View</button>
+                       <a href="/receipt/${r.id}/" target="_blank">
+                            <button type="button">View</button>
+                        </a>
+
                         <button>Edit</button>
                         <button>Delete</button>
                     </td>
