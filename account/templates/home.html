@@ -1,8 +1,52 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Receipt{% endblock %}
 
-    
 {% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Our Receipt Highlights</h2>
+    <div class="row justify-content-center">
 
+        <!-- SUV -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-lg border-0 h-100 text-center p-3">
+                <img src="{% static 'account/suv.jpg' %}" alt="Digital Receipts" class="card-img-top img-fluid rounded">
+                <div class="card-body">
+                    <h4 class="card-title mt-2">Digital Receipts</h4>
+                    <p class="card-text">
+                        Manage and view all your receipts digitally for easier tracking and transparency.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Curva -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-lg border-0 h-100 text-center p-3">
+                <img src="{% static 'account/curva.jpg' %}" alt="Secure Payments" class="card-img-top img-fluid rounded">
+                <div class="card-body">
+                    <h4 class="card-title mt-2">Secure Payments</h4>
+                    <p class="card-text">
+                        Every transaction is safe and verified for a seamless and reliable experience.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Swift -->
+        <div class="col-md-5 mb-4">
+            <div class="card shadow-lg border-0 h-100 text-center p-3">
+                <img src="{% static 'account/swift.jpg' %}" alt="Instant Access" class="card-img-top img-fluid rounded">
+                <div class="card-body">
+                    <h4 class="card-title mt-2">Instant Access</h4>
+                    <p class="card-text">
+                        Access your receipt details anytime, anywhere from your personal dashboard.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}

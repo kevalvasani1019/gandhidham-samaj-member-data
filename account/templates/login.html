@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Shri Kutch Kadva Patidar Yuvak Mandal</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 380px;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .login-container img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            color: #1a4e80;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+            text-align: left;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"], input[type="password"], input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            background-color: #1a4e80;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #2c6cb2;
+        }
+
+        .forgot-password {
+            margin-top: 12px;
+            text-align: right;
+        }
+
+        .forgot-password a {
+            color: #1a4e80;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 10px;
+            text-align: center;
+            width: 100%;
+            color: #555;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+        <h2>Member Login</h2>
+
+        <form method="POST" action="">
+            {% csrf_token %}
+            {% if form.errors %}
+                <p style="color: red; font-size: 14px;">Invalid username or password</p>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="username">User ID</label>
+                <input type="text" name="username" id="username" placeholder="Enter your User ID" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="Enter your Password" required>
+            </div>
+
+            <div class="forgot-password">
+                <a href="{% url 'password_reset' %}">Forgot Password?</a>
+            </div>
+
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <footer>
+        © 2025 Shri Kutch Kadva Patidar Yuvak Mandal - All Rights Reserved
+    </footer>
+
+</body>
+</html>
+    
