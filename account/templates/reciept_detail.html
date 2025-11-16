@@ -1,116 +1,222 @@
 {% load static %}
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Receipt - Shri Kutch Kadva Patidar Yuvak Mandal</title>
-<style>
-  html,body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    background: #fff;
-    color: #000;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt - Shri Kutch Kadva Patidar Yuvak Mandal</title>
 
-  .receipt-wrap {
-    box-sizing: border-box;
-    width: 1050px;
-    max-width: 98%;
-    margin: 25px auto;
-    border: 4px solid #0b0b0b;
-    padding: 16px 22px;
-    background: #fff;
-  }
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background: #fff;
+      color: #000;
+      overflow: hidden; /* ✅ Prevent scrollbars */
+    }
 
-  .header { text-align: center; margin-bottom: 8px; }
-  .org-title {
-    font-size: 30px;
-    font-weight: 700;
-    color: #b70b0b;
-    margin: 0;
-  }
-  .org-sub {
-    margin: 4px 0 0;
-    color: #1e3b66;
-    font-size: 16px;
-    font-weight: 600;
-  }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
 
-  .top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin: 8px 6px 18px;
-    flex-wrap: wrap;
-  }
+    .receipt-wrap {
+      box-sizing: border-box;
+      width: 1050px;
+      max-width: calc(100vw - 20px);
+      margin: 10px auto;
+      border: 4px solid #000;
+      padding: 16px 22px;
+      background: #fff;
+      overflow: hidden; /* ✅ Prevent internal scroll */
+    }
 
-  .receipt-no strong { font-weight: 800; font-size: 18px; }
-  .date { font-weight: 700; }
+    .header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
 
-  .logo-area { text-align: center; margin-bottom: 6px; }
-  .logo-area img { width: 110px; height: auto; }
+    .org-title {
+      font-size: 30px;
+      font-weight: 700;
+      color: #b70b0b;
+      margin: 0;
+    }
 
-  .content { padding: 6px 6px 28px; min-height: 300px; }
+    .org-sub {
+      margin: 4px 0 0;
+      color: #1e3b66;
+      font-size: 16px;
+      font-weight: 600;
+    }
 
-  .line { margin: 12px 0; font-size: 18px; }
-  .label { font-weight: 600; margin-right: 8px; }
-  .value { font-weight: 800; letter-spacing: 0.6px; }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin: 8px 6px 18px;
+      flex-wrap: wrap;
+    }
 
-  .amount-words {
-    font-size: 15px;
-    font-weight: 600;
-    margin-left: 6px;
-    color: #333;
-    display: inline-block;
-  }
+    .receipt-no strong {
+      font-weight: 800;
+      font-size: 18px;
+    }
 
-  .purpose { margin-top: 14px; font-size: 17px; }
+    .date {
+      font-weight: 700;
+    }
 
-  .bottom-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 36px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
+    .logo-area {
+      text-align: center;
+      margin-bottom: 6px;
+    }
 
-  .amount-box {
-    border: 2px solid #000;
-    padding: 8px 12px;
-    width: 320px;
-    font-size: 18px;
-    font-weight: 700;
-  }
+    .logo-area img {
+      width: 110px;
+      height: auto;
+    }
 
-  .sign-block { text-align: right; min-width: 320px; }
-  .org-name { font-weight: 800; font-size: 18px; }
-  .sign-name { margin-top: 16px; font-size: 14px; font-weight: 700; }
-  .designation { font-size: 20px; font-weight: 900; letter-spacing: 2px; margin-top: 2px; }
+    .content {
+      padding: 6px 6px 28px;
+    }
 
-  @media print {
-    .receipt-wrap { box-shadow: none; margin: 0; border-width: 3px; width: 100%; }
-    body { -webkit-print-color-adjust: exact; }
-  }
-</style>
+    .line {
+      margin: 12px 0;
+      font-size: 18px;
+    }
+
+    .label {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .value {
+      font-weight: 800;
+      letter-spacing: 0.6px;
+    }
+
+    .amount-words {
+      font-size: 15px;
+      font-weight: 600;
+      margin-left: 6px;
+      color: #333;
+      display: inline-block;
+    }
+
+    .purpose {
+      margin-top: 14px;
+      font-size: 17px;
+    }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 36px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .amount-box {
+      border: 2px solid #000;
+      padding: 8px 12px;
+      width: 250px;
+      font-size: 35px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .sign-block {
+      text-align: right;
+      min-width: 320px;
+    }
+
+    .org-name {
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .sign-name {
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .designation {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-top: 2px;
+    }
+
+    /* Floating print button */
+    .print-btn {
+      position: fixed;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #1e3b66;
+      color: #fff;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 22px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .print-btn:hover {
+      background-color: #b70b0b;
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    /* ✅ Print settings */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        background: #fff;
+      }
+      .print-btn {
+        display: none;
+      }
+      .receipt-wrap {
+        box-shadow: none;
+        width: calc(100% - 10px);
+        margin: 5px;
+        border-width: 3px;
+      }
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Floating Print Button -->
+  <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+
+  <!-- Receipt -->
   <div class="receipt-wrap" role="document" aria-label="Receipt">
     <div class="header">
-      <h1 class="org-title">SHRI KUTCH KADVA PATIDAR YUVAK MANDAL - GANDHIDHAM</h1>
+      <h1 class="org-title">SHRI KUTCH KADVA PATIDAR SAMAJ - GANDHIDHAM</h1>
       <div class="org-sub">GANDHIDHAM KUTCH - 370201</div>
     </div>
 
     <div class="top-row">
-      <div class="receipt-no">Receipt No. : <strong>{{ receipt.receipt_number }}</strong></div>
-      <div class="date">Date : <span class="value">{{ receipt.date|date:"d-M-Y" }}</span></div>
+      <div class="receipt-no">
+        Receipt No.: <strong>{{ receipt.receipt_number }}</strong>
+      </div>
+      <div class="date">
+        Date: <span class="value">{{ receipt.date|date:"d-M-Y" }}</span>
+      </div>
     </div>
 
     <div class="logo-area">
-      <img src="{% static 'images/logo.png' %}" alt="Organization logo" />
+      <img src="{% static 'logo.png' %}" alt="Organization logo" />
     </div>
 
     <div class="content">
@@ -130,10 +236,10 @@
         <span class="value">{{ receipt.purpose }}</span>
       </div>
 
-      <div style="height:90px;"></div>
-
       <div class="bottom-row">
-        <div class="amount-box" style="height: 40px; width: 250PX; font-size: 35px;">Rs. {{ receipt.amount|floatformat:2 }}</div>
+        <div class="amount-box">
+          Rs. {{ receipt.amount|floatformat:2 }}
+        </div>
         <div class="sign-block">
           <div class="org-name">S.K.K.P. YUVAK MANDAL</div>
           <div class="sign-name">SACHIN POKAR</div>
@@ -142,5 +248,6 @@
       </div>
     </div>
   </div>
+
 </body>
 </html>

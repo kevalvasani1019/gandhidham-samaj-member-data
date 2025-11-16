@@ -62,20 +62,20 @@ button.save-btn:hover {
 {% endblock %}
 
 {% block content %}
-<h2 style="text-align:center;">{% if member %}Edit{% else %}Add{% endif %} Member</h2>
+<h2 style="text-align:center;">Edit Member</h2>
 
-<form method="POST" enctype="multipart/form-data">
+<form id="memberForm" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
 
     <div class="form-row">
-        <div style="flex: 1; text-align: left;">
+       <div style="flex: 1; width: 70%; text-align: left;">
             <label>Yuvak Mandal ID:</label>
             <input name="yuvak_mandal_id" type="text"
                    style="height: 25px; width: 50px; font-size: medium; font-weight: bold;"
                    value="{{ member.yuvak_mandal_id|default_if_none:'' }}" required>
         </div>
-        <div style="flex: 1; text-align: left;">
-            <label>Mobile No.:</label>
+        <div style="flex: 1; width: 30%; text-align: left;">
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mobile No.:</label>
             <input name="mobile_number" type="text"
                    style="height: 25px; width: 150px; font-size: larger;"
                    value="{{ member.mobile_number|default_if_none:'' }}"
@@ -85,17 +85,21 @@ button.save-btn:hover {
     <br>
 
     <div class="form-row">
+        <div style="flex: 1; width: 80%; text-align: left;">
         <label>Member Name:</label>
         <input name="member_name" type="text"
                style="height: 25px; width: 400px; font-weight: bold; font-size: larger;"
                value="{{ member.member_name|default_if_none:'' }}">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Relationship:</label>
+    </div>
+        <div style="flex: 1; width: 20%; text-align: left;">
+       <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Relationship:</label>
         <select name="relationship" style="width: 100px;">
             <option value="">Select</option>
             {% for item in relationship_types %}
                 <option value="{{ item.id }}" {% if member.relationship_id == item.id %}selected{% endif %}>{{ item.name }}</option>
             {% endfor %}
         </select>
+        </div>
     </div>
     <br>
 
@@ -153,10 +157,41 @@ button.save-btn:hover {
             <input type="file" name="photo" accept="image/*">
         </div>
         <div style="flex: 0 0 70%; padding-left: 20px;">
-            <button type="submit" class="save-btn" title="Save">
+            <button type="submit" id="submitBtn" class="save-btn">
                 <i class="fa fa-save"></i> {% if member %}Update{% else %}Save{% endif %}
             </button>
         </div>
     </div>
 </form>
+
+<!-- AJAX SCRIPT -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$("#memberForm").on("submit", function(e) {
+    e.preventDefault();
+
+    let formData = new FormData(this);
+
+    $.ajax({
+        url: "",  // same URL
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+
+        success: function(response) {
+            alert("Member saved!");
+            window.location.href = "/member/";
+            console.log(response);
+        },
+
+        error: function(xhr) {
+            alert("Error: Data not saved");
+            console.log(xhr.responseText);
+        }
+    });
+});
+</script>
+
 {% endblock %}

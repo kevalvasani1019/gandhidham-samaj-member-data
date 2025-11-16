@@ -1,12 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import CreateView, ListView, TemplateView
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
-
+from django.conf import settings
+from twilio.rest import Client
+from .models import Member, BloodGroup, TypeOFBusiness, RelationshipType, MaritalStatus
+from django.core.paginator import Paginator
+from django.conf import settings
+from twilio.rest import Client
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView
+from .models import Member, RelationshipType, BloodGroup, MaritalStatus, TypeOFBusiness
 
 from .models import (
     Member, RelationshipType, BloodGroup, MaritalStatus,
@@ -30,17 +38,17 @@ class Home(TemplateView):
         context = super().get_context_data(**kwargs)
         context['projects'] = [
             {
-                'image': 'account/suv.jpg',
+                'image': 'suv.jpg',
                 'title': 'Digital Receipts',
                 'description': 'Manage and view all your receipts digitally for easier tracking and transparency.'
             },
             {
-                'image': 'account/curva.jpg',
+                'image': 'curva.jpg',
                 'title': 'Secure Payments',
                 'description': 'Every transaction is safe and verified for a seamless and reliable experience.'
             },
             {
-                'image': 'account/swift.jpg',
+                'image': 'swift.jpg',
                 'title': 'Instant Access',
                 'description': 'Access your receipt details anytime, anywhere from your personal dashboard.'
             }
@@ -50,11 +58,6 @@ class Home(TemplateView):
 # -------------------------------------------------------------------
 # ADD MEMBER VIEW (CREATE)
 # -------------------------------------------------------------------
-from django.conf import settings
-from twilio.rest import Client
-from django.urls import reverse_lazy
-from django.views.generic.edit import CreateView
-from .models import Member, RelationshipType, BloodGroup, MaritalStatus, TypeOFBusiness
 
 class AddFormCreateView(CreateView):
     model = Member
@@ -82,27 +85,25 @@ class AddFormCreateView(CreateView):
         return context
 
     def form_valid(self, form):
-        # Combine address fields
+        # ⚠️ ONLY keep the necessary manual step: Combining address fields
         plot = self.request.POST.get('plot_number', '').strip()
         landmark = self.request.POST.get('landmark', '').strip()
         city = self.request.POST.get('city', '').strip()
         state = self.request.POST.get('state', '').strip()
+        
+        # Manually set the address field (still required)
         form.instance.address = ", ".join(filter(None, [plot, landmark, city, state]))
 
-        # Business name
-        form.instance.business = self.request.POST.get('business_name', '').strip()
-
-        response = super().form_valid(form)
+        super().form_valid(form)
 
         # ✅ Send Twilio SMS after member is created
         self.send_welcome_sms(form.instance)
 
-        return response
-
+        return JsonResponse({'status': 'success', 'redirect_url': str(self.success_url)})
+    
     def send_welcome_sms(self, member):
         try:
             client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-            
             message_body = (
                 f"Jai Swaminarayan {member.member_name}!\n"
                 f"You have been successfully added to Shri Kutch Kadva Patidar Yuvak Mandal Samaj.\n"
@@ -121,6 +122,86 @@ class AddFormCreateView(CreateView):
         print("Form errors:", form.errors)
         return super().form_invalid(form)
 
+
+class MemberUpdateView(UpdateView):
+    model = Member
+    template_name = "edit-form.html"
+    fields = [
+        "yuvak_mandal_id", "member_name", "mobile_number",
+        "date_of_birth", "business", "relationship",
+        "marital_status", "blood_group", "type_of_business",
+        "photo"
+    ]
+
+    success_url = reverse_lazy("members")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        member = self.object
+
+        # Split address
+        parts = (member.address or "").split(", ")
+
+        context["blood_groups"] = BloodGroup.objects.all()
+        context["business_types"] = TypeOFBusiness.objects.all()
+        context["relationship_types"] = RelationshipType.objects.all()
+        context["marital_statuses"] = MaritalStatus.objects.all()
+
+        # Address parts
+        context["plot_number"] = parts[0] if len(parts) > 0 else ""
+        context["landmark"] = parts[1] if len(parts) > 1 else ""
+        context["city"] = parts[2] if len(parts) > 2 else ""
+        context["state"] = parts[3] if len(parts) > 3 else ""
+
+        return context
+
+    def form_valid(self, form):
+        member = form.save(commit=False)
+
+        request = self.request
+
+        # Custom address fields
+        plot = request.POST.get("plot_number", "")
+        landmark = request.POST.get("landmark", "")
+        city = request.POST.get("city", "")
+        state = request.POST.get("state", "")
+        member.address = f"{plot}, {landmark}, {city}, {state}"
+
+        member.save()
+
+        # After update → SMS
+        self.send_update_sms(member)
+
+        messages.success(request, "Member details updated successfully!")
+        return redirect(self.success_url)
+
+
+    # ------------------------------
+    # SMS Function
+    # ------------------------------
+
+    def send_update_sms(self, member):
+        try:
+            print(">>> Sending SMS to:", member.mobile_number)
+            client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+
+            message_body = (
+                f"🙏 Jai Swaminarayan {member.member_name}! 🙏\n"
+                f"Your member profile in Shri Kutch Kadva Patidar Yuvak Mandal "
+                f"has been successfully updated.\n"
+                f"Thank you for keeping your information up to date!"
+            )
+
+            client.messages.create(
+                body=message_body,
+                from_=settings.TWILIO_PHONE_NUMBER,
+                to=f"+91{member.mobile_number}"
+            )
+
+            print(">>> SMS sent successfully!")
+        except Exception as e:
+            print("Twilio SMS Error:", e)
 
 # -------------------------------------------------------------------
 # MEMBER LIST VIEW (SEARCH + FILTER)
@@ -147,8 +228,7 @@ class MemberListView(ListView):
                 queryset = queryset.filter(yuvak_mandal_id__icontains=search_query)
             elif search_type == 'Business type':
                 queryset = queryset.filter(type_of_business__name__icontains=search_query)
-        return queryset
-
+        return queryset.order_by('-created_at')
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_type'] = self.request.GET.get('search_type', '')
@@ -159,67 +239,109 @@ class MemberListView(ListView):
 # -------------------------------------------------------------------
 # RECEIPT VIEW (ADD + DISPLAY)
 # -------------------------------------------------------------------
-def receipt_view(request):
-    member = None
-    receipts = []
-    payment_types = TypeOfPayment.objects.all()
+from django.views import View
+from django.shortcuts import render
+from django.contrib import messages
+from django.utils import timezone
+from .models import Member, Receipt, TypeOfPayment  # Adjust import path as needed
 
-    if request.method == "POST":
-        print(">>> POST data:", request.POST)  # Debug line
+class ReceiptView(View):
+    """
+    Handles both GET requests (to search for a member and display receipts)
+    and POST requests (to save a new receipt).
+    """
+    template_name = 'reciept.html'
+
+    def get_context_data(self, member=None, receipts=None):
+        """Helper function to build the common context dictionary."""
+        return {
+            'member': member,
+            'receipts': receipts if receipts is not None else [],
+            'payment_types': TypeOfPayment.objects.all()
+        }
+
+    def get(self, request, *args, **kwargs):
+        """Handles GET request: Used for initial load and member search by ID."""
+        member = None
+        receipts = []
+        yuvak_mandal_id = request.GET.get('yuvak_mandal_id')
+
+        if yuvak_mandal_id:
+            try:
+                member = Member.objects.get(yuvak_mandal_id=yuvak_mandal_id)
+                receipts = Receipt.objects.filter(member=member).order_by('-date')
+            except Member.DoesNotExist:
+                messages.error(request, f"Member with ID {yuvak_mandal_id} not found.")
+                member = None
+        
+        context = self.get_context_data(member=member, receipts=receipts)
+        return render(request, self.template_name, context)
+
+
+    def post(self, request, *args, **kwargs):
+        """Handles POST request: Used for member search by ID or saving a new receipt."""
+        member = None
+        receipts = []
+        
+        # 1. Retrieve Member
         member_id = request.POST.get('member_id')
+        if not member_id:
+            messages.error(request, "Member ID is required.")
+            return render(request, self.template_name, self.get_context_data())
+
         try:
             member = Member.objects.get(pk=member_id)
         except Member.DoesNotExist:
-            messages.error(request, "Member not found.")
-            member = None
+            messages.error(request, f"Member with ID {member_id} not found.")
+            return render(request, self.template_name, self.get_context_data())
 
-        if member:
-            fee_type_id = request.POST.get('fee_donation')
-            fee_type = TypeOfPayment.objects.get(pk=fee_type_id) if fee_type_id else None
+        # If member is found, retrieve existing receipts for context
+        receipts = Receipt.objects.filter(member=member).order_by('-date')
 
-            # Auto-generate receipt number if not provided
-            receipt_number = request.POST.get('receipt_number')
-            if not receipt_number:
-                last_receipt = Receipt.objects.order_by('-id').first()
-                receipt_number = (last_receipt.receipt_number + 1) if last_receipt else 1
+        # 2. Handle Receipt Number Auto-generation/Validation
+        receipt_number = request.POST.get('receipt_number')
+        if not receipt_number:
+            last_receipt = Receipt.objects.order_by('-receipt_number').first() # Order by number, not ID
+            receipt_number = (last_receipt.receipt_number + 1) if last_receipt and last_receipt.receipt_number else 1
 
+        try:
+            receipt_number = int(receipt_number)
+        except (ValueError, TypeError):
+            messages.error(request, "Receipt number must be a valid number.")
+            return render(request, self.template_name, self.get_context_data(member=member, receipts=receipts))
+
+        # 3. Retrieve Fee Type
+        fee_type = None
+        fee_type_id = request.POST.get('fee_donation')
+        if fee_type_id:
             try:
-                receipt_number = int(receipt_number)
-            except ValueError:
-                messages.error(request, "Receipt number must be numeric.")
-                return render(request, 'reciept.html', {
-                    'member': member,
-                    'receipts': receipts,
-                    'payment_types': payment_types
-                })
+                fee_type = TypeOfPayment.objects.get(pk=fee_type_id)
+            except TypeOfPayment.DoesNotExist:
+                messages.error(request, "Invalid Fee/Donation type selected.")
+                return render(request, self.template_name, self.get_context_data(member=member, receipts=receipts))
 
-            # Save the receipt
+
+        # 4. Save the Receipt
+        try:
             Receipt.objects.create(
                 receipt_number=receipt_number,
                 member=member,
                 date=request.POST.get('date') or timezone.now(),
                 fee_donation=fee_type,
                 purpose=request.POST.get('purpose'),
+                # Ensure amount is converted to a valid type for the model field (e.g., Decimal or float)
                 amount=request.POST.get('amount') or 0
             )
-            messages.success(request, "Receipt saved successfully.")
+            messages.success(request, f"Receipt #{receipt_number} saved successfully for {member.member_name}.")
+            # Refresh receipts list after saving
             receipts = Receipt.objects.filter(member=member).order_by('-date')
 
-    elif request.method == "GET":
-        yuvak_mandal_id = request.GET.get('yuvak_mandal_id')
-        if yuvak_mandal_id:
-            try:
-                member = Member.objects.get(yuvak_mandal_id=yuvak_mandal_id)
-                receipts = Receipt.objects.filter(member=member).order_by('-date')
-            except Member.DoesNotExist:
-                member = None
+        except Exception as e:
+            messages.error(request, f"Error saving receipt: {e}")
 
-    return render(request, 'reciept.html', {
-        'member': member,
-        'receipts': receipts,
-        'payment_types': payment_types
-    })
-
+        # 5. Render the page again with the member data
+        context = self.get_context_data(member=member, receipts=receipts)
+        return render(request, self.template_name, context)
 
 # -------------------------------------------------------------------
 # API: FETCH MEMBERS (AJAX)
@@ -267,11 +389,6 @@ def get_next_receipt_number(request):
 # -------------------------------------------------------------------
 # API: GET RECEIPTS (FILTER)
 # -------------------------------------------------------------------
-from django.views.generic import ListView
-from django.http import JsonResponse
-from django.utils.dateparse import parse_date
-from django.core.paginator import Paginator
-from .models import Receipt
 
 class ReceiptListView(ListView):
     model = Receipt
@@ -324,91 +441,6 @@ class ReceiptListView(ListView):
         }
 
         return JsonResponse(data)
-
-
-
-# -------------------------------------------------------------------
-# EDIT MEMBER VIEW
-# -------------------------------------------------------------------
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.conf import settings
-from twilio.rest import Client
-from .models import Member, BloodGroup, TypeOFBusiness, RelationshipType, MaritalStatus
-
-def edit_member(request, pk): # Debug line
-    member = get_object_or_404(Member, pk=pk)
-    blood_groups = BloodGroup.objects.all()
-    business_types = TypeOFBusiness.objects.all()
-    relationship_types = RelationshipType.objects.all()
-    marital_statuses = MaritalStatus.objects.all()
-
-    if request.method == "POST":
-        member.yuvak_mandal_id = request.POST.get("yuvak_mandal_id")
-        member.member_name = request.POST.get("member_name")
-        member.mobile_number = request.POST.get("mobile_number")
-        member.date_of_birth = request.POST.get("date_of_birth") or None
-        member.business = request.POST.get("business")
-        member.relationship_id = request.POST.get("relationship") or None
-        member.marital_status_id = request.POST.get("marital_status") or None
-        member.blood_group_id = request.POST.get("blood_group") or None
-        member.type_of_business_id = request.POST.get("business_type") or None
-
-        plot_number = request.POST.get("plot_number", "")
-        landmark = request.POST.get("landmark", "")
-        city = request.POST.get("city", "")
-        state = request.POST.get("state", "")
-        member.address = f"{plot_number}, {landmark}, {city}, {state}"
-
-        if "photo" in request.FILES:
-            member.photo = request.FILES["photo"]
-
-        member.save()
-
-        # ✅ Send Twilio SMS after successful update
-        send_update_sms(member)
-
-        messages.success(request, "Member details updated successfully!")
-        return redirect("members")
-
-    address_parts = (member.address or "").split(", ")
-    address_context = {
-        "plot_number": address_parts[0] if len(address_parts) > 0 else "",
-        "landmark": address_parts[1] if len(address_parts) > 1 else "",
-        "city": address_parts[2] if len(address_parts) > 2 else "",
-        "state": address_parts[3] if len(address_parts) > 3 else "",
-    }
-
-    context = {
-        "member": member,
-        "blood_groups": blood_groups,
-        "business_types": business_types,
-        "relationship_types": relationship_types,
-        "marital_statuses": marital_statuses,
-        **address_context,
-    }
-    return render(request, "edit-form.html", context)
-
-
-def send_update_sms(member):
-    try:
-        print(">>> Sending SMS to:", member.mobile_number)  # Debug line
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        message_body = (
-            f"🙏 Jai Swaminarayan {member.member_name}! 🙏\n"
-            f"Your member profile in Shri Kutch Kadva Patidar Yuvak Mandal has been successfully updated.\n"
-            f"Thank you for keeping your information up to date!"
-        )
-
-        client.messages.create(
-            body=message_body,
-            from_=settings.TWILIO_PHONE_NUMBER,
-            to=f"+91{member.mobile_number}"
-        )
-        print(">>> SMS sent successfully!")  # Debug line
-    except Exception as e:
-        print("Twilio SMS Error:", e)
-
 
 
 # -------------------------------------------------------------------

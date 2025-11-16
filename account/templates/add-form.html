@@ -51,31 +51,35 @@ button.save-btn:hover {
 {% endblock %}
 
 {% block content %}
-<form method="POST" enctype="multipart/form-data">
+<form id="member-form" method="POST" enctype="multipart/form-data">
     {% csrf_token %}
 
     <div class="form-row">
-        <div style="flex: 1; text-align: left;">
+        <div style="flex: 1; width: 70%; text-align: left;">
             <label>Yuvak Mandal ID:</label>
             <input name="yuvak_mandal_id" style="height: 25px; width: 50px; font-size: medium; font-weight: bold;" type="text" required>
         </div>
-        <div style="flex: 1; text-align: left;">
-            <label>Mobile No.:</label>
+        <div style="flex: 1; width: 30%; text-align: left;">
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Mobile No.:</label>
             <input name="mobile_number" type="text" style="height: 25px; width: 150px; font-size: larger;" placeholder="Mobile number" required>
         </div>
     </div>
     <br>
 
     <div class="form-row">
-        <label>Member Name:</label>
-        <input name="member_name" type="text" style="height: 25px; width: 400px; font-weight: bold; font-size: larger;">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Relationship:</label>
-        <select name="relationship" style="width: 100px;">
-            <option value="">Select</option>
-            {% for item in relationship_types %}
-                <option value="{{ item.id }}">{{ item.name }}</option>
-            {% endfor %}
-        </select>
+        <div style="flex: 1; width: 80%; text-align: left;">
+            <label>Member Name:</label>
+            <input name="member_name" type="text" style="height: 25px; width: 400px; font-weight: bold; font-size: larger;">
+        </div>
+        <div style="flex: 1; width: 20%; text-align: left;">
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Relationship:</label>
+            <select name="relationship" style="width: 100px;">
+                <option value="">Select</option>
+                {% for item in relationship_types %}
+                    <option value="{{ item.id }}">{{ item.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
     <br>
 
@@ -90,7 +94,7 @@ button.save-btn:hover {
 
     <div class="form-row">
         <label>Type of Business:</label>
-        <select name="business_type" style="width: 200px;">
+        <select name="type_of_business" style="width: 200px;">
             <option value="">Select</option>
             {% for item in business_types %}
                 <option value="{{ item.id }}">{{ item.name }}</option>
@@ -123,13 +127,82 @@ button.save-btn:hover {
 
     <div class="save-container">
         <div style="flex: 0 0 30%;">
-            <input type="file" name="photo" accept="image/*">
+            <input type="file" name="photo" id="member-photo" accept="image/*">
         </div>
         <div style="flex: 0 0 70%; padding-left: 20px;">
             <button type="submit" class="save-btn" title="Save">
-                <i class="fa fa-save"></i> Save
+                Save
             </button>
         </div>
     </div>
 </form>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Select the form by its ID
+    $('#member-form').on('submit', function(e) {
+        // Prevent the default form submission (page reload)
+        e.preventDefault(); 
+        
+        // Get the form data. FormData is essential for file uploads.
+        let formData = new FormData(this);
+        let formURL = $(this).attr('action') || window.location.href; // Use current URL if action is empty
+
+        // Get the CSRF token from the form
+        let csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+        // Perform the AJAX request
+        $.ajax({
+            url: formURL, 
+            type: 'POST', 
+            data: formData,
+            // These three options are crucial for sending a form with a file (multipart/form-data)
+            processData: false,
+            contentType: false,
+            // Add Django CSRF token to the headers
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            
+            success: function(response) {
+                // Check if the server returned a redirect URL
+                if (response.status === 'success' && response.redirect_url) {
+                    alert('Member data saved successfully! Redirecting...');
+                    // **THIS IS THE FIX:** Redirect the browser to the success URL
+                    window.location.href = response.redirect_url; 
+                } else {
+                    alert('Member data saved successfully!');
+                    // Optionally handle other successful responses
+                    $('#member-form')[0].reset(); 
+                    $('#member-photo').val(''); 
+                }
+            },
+            
+            error: function(xhr, errmsg, err) {
+                // Error logic
+                let errorMsg = 'An error occurred during submission.';
+                
+                // Try to get a specific error from the server response
+                try {
+                    let response = JSON.parse(xhr.responseText);
+                    if (response.error) {
+                        errorMsg = response.error;
+                    } else if (xhr.status === 400) {
+                        errorMsg = 'Validation failed. Please check your inputs.';
+                    }
+                } catch (e) {
+                    console.log("Could not parse JSON error response.");
+                }
+
+                alert('Submission failed: ' + errorMsg);
+                console.log(xhr.status + ": " + xhr.responseText); // Log error for debugging
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

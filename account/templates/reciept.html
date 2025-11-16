@@ -116,17 +116,20 @@
     {% csrf_token %}
     <input type="hidden" name="member_id" id="member_id" />
 
-    <div class="form-row" style="margin-bottom: 25px;">
-        <div style="flex-grow: 1; display: flex; align-items: center;">
-            <label>Receipt no.:</label>
-            <input class="input-small" type="text" name="receipt_number" id="receipt_number" readonly />
-        </div>
-        <div style="flex-shrink: 0;">
-            <button type="submit" style="background-color: #2c6cb2; color: white; border: none; padding: 10px 30px; border-radius: 4px; cursor: pointer; font-size: 20px; font-weight: bold;" title="Add New Receipt">
-                Add New Receipt
-            </button>
-        </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px;">
+    <div class="form-row" style="display: flex; align-items: center; gap: 10px;">
+        <label for="receipt_number" style="font-weight: 600;">Receipt no.:</label>
+        <input class="input-small" type="text" name="receipt_number" id="receipt_number" readonly
+               style="padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; width: 150px;" />
     </div>
+    <button type="button" id="addNewReceiptBtn"
+        style="background-color: #2c6cb2; color: white; border: none; padding: 10px 30px;
+               border-radius: 4px; cursor: pointer; font-size: 18px; font-weight: bold;"
+        title="Add New Receipt">
+        Add New Receipt
+    </button>
+</div>
+
 
     <div class="form-row">
         <div class="field-group">
@@ -190,7 +193,7 @@
         </div>
 
         <div style="flex-shrink: 0;">
-            <button style="background-color: #2c6cb2; color: white; border: none; padding: 13px 52px; border-radius: 4px; cursor: pointer; font-size: 20px; font-weight: bold;" title="Save">
+            <button type="submit" style="background-color: #2c6cb2; color: white; border: none; padding: 13px 52px; border-radius: 4px; cursor: pointer; font-size: 20px; font-weight: bold;" title="Save">
                 Save
             </button>
         </div>
@@ -385,6 +388,41 @@ nameInput.addEventListener("input", () => {
     if (v) fetchMembers(`member_name=${v}`); else fetchReceipts();
 });
 
+// New function to reset all form fields and state
+function resetForm() {
+    const form = document.querySelector('form');
+    const currentReceiptNo = document.getElementById('receipt_number').value;
+
+    form.reset();
+
+    document.getElementById('receipt_number').value = currentReceiptNo;
+    document.getElementById("member_select").style.display = "none";
+    document.getElementById("member_name").style.display = "inline-block";
+    document.getElementById("member_name").value = "";
+    document.getElementById("member_id").value = "";
+    document.getElementById("yuvak_mandal_id").value = "";
+    document.getElementById("mobile_number").value = "";
+    document.querySelector('select[name="fee_donation"]').value = "";
+    document.querySelector('input[name="purpose"]').value = "";
+    document.querySelector('input[name="amount"]').value = "";
+
+    const dateInput = document.getElementById('receipt_date');
+    dateInput.value = new Date().toISOString().split('T')[0];
+
+     const msgDiv = document.querySelector('.messages');
+    if (msgDiv) msgDiv.innerHTML = '';
+
+    editingReceiptId = null;
+
+    const saveBtn = document.querySelector('button[title="Save"], button[title="Update"]');
+    if (saveBtn) {
+        saveBtn.textContent = 'Save';
+        saveBtn.title = 'Save';
+    }
+}
+// Event listener for the "Add New Receipt" button
+document.getElementById('addNewReceiptBtn').addEventListener('click', resetForm);
+
 window.addEventListener("DOMContentLoaded", () => {
     const date = document.getElementById('receipt_date');
     if (!date.value) date.value = new Date().toISOString().split('T')[0];
@@ -467,12 +505,10 @@ document.querySelector('form').addEventListener('submit', e => {
     .then(data => {
         if (data.success) {
             alert(editingReceiptId ? 'Receipt updated successfully!' : 'Receipt added successfully!');
-            form.reset();
+            resetForm(); // Use the new resetForm function
             fetchReceipts();
-            fetchNextReceiptNumber(document.getElementById('receipt_date').value);
-            document.querySelector('button[title="Update"]').textContent = 'Save';
-            editingReceiptId = null;
         } else {
+            // Handle errors, if any specific error messages are returned in data
             alert('Error saving receipt.');
         }
     })

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 {% load static %}
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,17 +96,36 @@
     <div class="container">
         <!-- Sidebar -->
         <div class="sidebar">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" width="120" height="120">
+
+            <img src="{% static 'logo.png' %}" alt="Logo" width="120" height="120">
+
+            {% if user.is_authenticated %}
+            {# Links for logged-in users #}
             <h3>MEMBERS</h3>
             <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'members' %}">Members</a>
             <a href="{% url 'receipt' %}">Receipt</a>
+
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit"
+                    style="background: none; border: none; color: inherit; cursor: pointer; padding: 0; font: inherit;">
+                    Logout
+                </button>
+            </form>
+
+            {% else %}
+            {# Links for logged-out/anonymous users #}
+            <h3>MEMBERS</h3>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'login' %}">Login</a> {# Link to your login page #}
+            {% endif %}
         </div>
 
         <!-- Main Content -->
         <div class="main">
             <div class="header">
-                <h2>SHRI KUTCH KADVA PATIDAR YUVAK MANDAL - GANDHIDHAM</h2>
+                <h2>SHRI KUTCH KADVA PATIDAR SAMAJ - GANDHIDHAM</h2>
             </div>
             {% block content %}{% endblock %}
         </div>
@@ -113,4 +133,5 @@
 
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

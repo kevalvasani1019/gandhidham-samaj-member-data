@@ -1,5 +1,23 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+
+class User(AbstractUser):
+    username = None  # remove default username
+    phone = models.CharField(max_length=15, unique=True)
+    full_name = models.CharField(max_length=150)
+    name_code = models.CharField(max_length=20, editable=False)   # not unique now
+
+    USERNAME_FIELD = "phone"
+    REQUIRED_FIELDS = ["full_name"]
+
+    def save(self, *args, **kwargs):
+        if not self.name_code:
+            prefix = self.full_name[:4].upper()
+            year = timezone.now().year
+            self.name_code = f"{prefix}{year}"   # always same
+        super().save(*args, **kwargs)
+
 
 class RelationshipType(models.Model):
     """Stores relationship options (e.g., Father, Mother, Son, etc.)"""
